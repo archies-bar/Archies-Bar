@@ -299,4 +299,200 @@ try {
   if(firebaseConfig.apiKey!=="YOUR_API_KEY"){
     firebase.initializeApp(firebaseConfig);
     db=firebase.database();
-    ordersRef=db.ref("ord
+    ordersRef=db.ref("orders");
+    stockRef=db.ref("stock");
+    fbReady=true;
+    stockRef.on("value", snap=>{
+      outOfStock=snap.val()||{};
+      rebuildMenu();
+      if(document.getElementById('tab-stock').classList.contains('active')) renderStockPanel();
+    });
+  }
+} catch(e){ console.error("Firebase:",e); }
+
+function showView(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if(id==="view-bartender") initDashboard();
+  window.scrollTo(0,0);
+}
+
+function switchTab(name){
+  document.querySelectorAll(".dash-tab").forEach((t,i)=>{
+    t.classList.toggle("active",["orders","stock"][i]===name);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  if(name==="stock") renderStockPanel();
+}
+
+let selectedId=null;
+
+function drinkIsOOS(d){
+  if(isOOS(d.name)) return true;
+  if(d.spirits){ if(d.spirits.every(s=>isOOS(s))) return true; }
+  else { if(d.spirit.split(" or ").map(s=>s.trim()).every(s=>isOOS(s))) return true; }
+  if(d.mixers&&d.mixers.length===1&&isOOS(d.mixers[0])) return true;
+  if(d.mixers&&d.mixers.length>1&&d.mixers.every(m=>isOOS(m))) return true;
+  return false;
+}
+function availableMixers(d){ return (d.mixers||[]).filter(m=>!isOOS(m)); }
+function availableSpirits(d){ return (d.spirits||[]).filter(s=>!isOOS(s)); }
+function availableJuices(d){ return (d.juices||[]).filter(j=>!isOOS(j)); }
+
+function rebuildMenu(){
+  const grid=document.getElementById("drinks-grid");
+  if(!grid) return;
+  grid.innerHTML=""; selectedId=null;
+  document.getElementById("submit-btn").disabled=true;
+  MENU.forEach(d=>buildCard(d,grid));
+}
+
+function buildCard(d,grid){
+  const oos=drinkIsOOS(d);
+  const card=document.createElement("div");
+  card.className="drink-card"+(oos?" oos":"");
+  card.id="card-"+d.id;
+  let badges=`<span class="badge badge-spirit">${d.spirit}</span>`;
+  if(d.rec)    badges+=`<span class="badge badge-rec">★ Pick</span>`;
+  if(!d.canAF) badges+=`<span class="badge badge-alc">Alc Only</span>`;
+  if(oos)      badges+=`<span class="badge badge-oos">Out of Stock</span>`;
+  const aMixers=oos?[]:availableMixers(d);
+  const aSpirits=oos?[]:availableSpirits(d);
+  const aJuices=oos?[]:availableJuices(d);
+  let opts="";
+  if(d.juices&&aJuices.length>0)
+    opts+=`<div class="field" style="margin:0"><label>Juice</label><div class="select-wrap"><select id="juice-${d.id}" onclick="event.stopPropagation()">${aJuices.map(j=>`<option>${j}</option>`).join("")}</select></div></div>`;
+  if(d.spirits&&aSpirits.length>0)
+    opts+=`<div class="field" style="margin:0"><label>Spirit</label><div class="select-wrap"><select id="spirit-${d.id}" onclick="event.stopPropagation()">${aSpirits.map(s=>`<option>${s}</option>`).join("")}</select></div></div>`;
+  if(aMixers.length>1)
+    opts+=`<div class="field" style="margin:0"><label>Mixer</label><div class="select-wrap"><select id="mixer-${d.id}" onclick="event.stopPropagation()">${aMixers.map(m=>`<option>${m}</option>`).join("")}</select></div></div>`;
+  else if(aMixers.length===1)
+    opts+=`<div style="font-size:0.88rem;color:var(--cream-dim);font-style:italic">Mixer: ${aMixers[0]}</div>`;
+  if(!oos&&d.canAF)
+    opts+=`<div class="toggle-row" onclick="event.stopPropagation()"><span class="field-label">With Alcohol</span><label class="toggle"><input type="checkbox" id="alc-${d.id}" checked onchange="document.getElementById('alcval-${d.id}').textContent=this.checked?'Yes':'No'"><div class="t-track"></div><div class="t-thumb"></div></label><span class="toggle-val" id="alcval-${d.id}">Yes</span></div>`;
+  card.innerHTML=`<div class="drink-card-accent"></div><div class="drink-card-main"><div class="drink-card-top"><div class="drink-name">${d.name}</div><div class="badges">${badges}</div></div><div class="drink-desc">${d.desc}</div></div><div class="drink-opts"><div class="opts-inner">${opts}</div></div>`;
+  if(!oos) card.addEventListener("click",()=>selectDrink(d.id));
+  grid.appendChild(card);
+}
+
+function selectDrink(id){
+  if(selectedId) document.getElementById("card-"+selectedId)?.classList.remove("selected");
+  selectedId=id;
+  document.getElementById("card-"+id)?.classList.add("selected");
+  checkSubmit();
+}
+function checkSubmit(){
+  const name=document.getElementById("cust-name").value.trim();
+  document.getElementById("submit-btn").disabled=!(name&&selectedId);
+}
+document.getElementById("cust-name").addEventListener("input",checkSubmit);
+
+function submitOrder(){
+  const name=document.getElementById("cust-name").value.trim();
+  if(!name||!selectedId) return;
+  const d=MENU.find(x=>x.id===selectedId); if(!d) return;
+  const parts=[];
+  if(d.juices)  parts.push(document.getElementById("juice-"+d.id)?.value||"");
+  if(d.spirits) parts.push(document.getElementById("spirit-"+d.id)?.value||"");
+  const am=availableMixers(d);
+  if(am.length>1) parts.push(document.getElementById("mixer-"+d.id)?.value||"");
+  else if(am.length===1) parts.push(am[0]);
+  parts.push(d.canAF?(document.getElementById("alc-"+d.id)?.checked?"With Alcohol":"Alcohol-Free"):"With Alcohol");
+  const order={name,drink:d.name,spirit:d.spirit,details:parts.filter(Boolean).join(" · "),timestamp:Date.now()};
+  if(fbReady&&ordersRef) ordersRef.push(order).then(()=>showSuccess(name,d.name)).catch(()=>showSuccess(name,d.name,true));
+  else showSuccess(name,d.name,true);
+}
+
+function showSuccess(name,drink,offline=false){
+  const box=document.getElementById("success-box");
+  document.getElementById("success-msg").textContent=offline?`${drink} noted — Firebase not set up yet.`:`${drink} coming right up, ${name}!`;
+  box.classList.add("show");
+  document.getElementById("submit-btn").disabled=true;
+  setTimeout(()=>{
+    box.classList.remove("show");
+    document.getElementById("cust-name").value="";
+    if(selectedId){document.getElementById("card-"+selectedId)?.classList.remove("selected");selectedId=null;}
+    document.getElementById("submit-btn").disabled=true;
+  },5000);
+}
+
+function doLogin(){
+  const pw=document.getElementById("pw-input").value;
+  const err=document.getElementById("login-err");
+  if(pw===STAFF_PASSWORD){err.style.display="none";document.getElementById("pw-input").value="";showView("view-bartender");}
+  else err.style.display="block";
+}
+function doLogout(){listenStarted=false;if(ordersRef)ordersRef.off();showView("view-customer");}
+function toggleHint(){const h=document.getElementById("hint-reveal");h.style.display=h.style.display==="block"?"none":"block";}
+
+let listenStarted=false, knownKeys=new Set();
+
+function initDashboard(){
+  if(!fbReady||!ordersRef){
+    document.getElementById("order-tally").textContent="Firebase not configured.";
+    document.getElementById("orders-list").innerHTML=`<div class="empty-state"><div class="e-icon">🍸</div><p>Set up Firebase to see live orders.</p></div>`;
+    return;
+  }
+  if(listenStarted) return;
+  listenStarted=true;
+  ordersRef.on("value",snap=>renderOrders(snap.val()));
+}
+
+function renderOrders(data){
+  const list=document.getElementById("orders-list"),tally=document.getElementById("order-tally");
+  if(!data){tally.innerHTML="No active orders right now.";list.innerHTML=`<div class="empty-state"><div class="e-icon">🍸</div><p>Quiet night — waiting for orders…</p></div>`;knownKeys=new Set();return;}
+  const orders=Object.entries(data).map(([k,v])=>({key:k,...v})).sort((a,b)=>a.timestamp-b.timestamp);
+  tally.innerHTML=`<strong>${orders.length}</strong> active order${orders.length!==1?"s":""}`;
+  orders.forEach(o=>{if(!knownKeys.has(o.key))ping();});
+  knownKeys=new Set(orders.map(o=>o.key));
+  list.innerHTML="";
+  orders.forEach(o=>{
+    const card=document.createElement("div");
+    card.className="order-card";
+    const time=new Date(o.timestamp).toLocaleTimeString("en-NZ",{hour:"2-digit",minute:"2-digit"});
+    card.innerHTML=`<div class="order-info"><div class="o-name">${esc(o.name)}</div><div class="o-drink">${esc(o.drink)}</div><div class="o-details">${esc(o.details)}</div><div class="o-time">Ordered at ${time}</div></div><button class="btn-done" onclick="completeOrder('${o.key}')">Done ✓</button>`;
+    list.appendChild(card);
+  });
+}
+function completeOrder(key){if(ordersRef)ordersRef.child(key).remove();}
+
+function renderStockPanel(){
+  renderStockSection("stock-spirits",SPIRITS);
+  renderStockSection("stock-mixers",MIXERS);
+  renderStockSection("stock-drinks",MENU.map(d=>d.name));
+}
+function renderStockSection(containerId,items){
+  const el=document.getElementById(containerId); el.innerHTML="";
+  items.forEach(name=>{
+    const oos=isOOS(name),row=document.createElement("div");
+    row.className="stock-item"+(oos?" oos":"");
+    row.innerHTML=`<div class="stock-item-name">${name}</div><div class="stock-toggle-wrap"><span class="stock-status ${oos?"out":"in"}">${oos?"Out":"In Stock"}</span><label class="s-toggle"><input type="checkbox" ${oos?"checked":""} onchange="toggleStock('${name}',this.checked)"><div class="s-track"></div><div class="s-thumb"></div></label></div>`;
+    el.appendChild(row);
+  });
+}
+function toggleStock(name,isNowOOS){
+  const k=slug(name);
+  if(fbReady&&stockRef){if(isNowOOS)stockRef.child(k).set(true);else stockRef.child(k).remove();}
+  else{if(isNowOOS)outOfStock[k]=true;else delete outOfStock[k];rebuildMenu();renderStockPanel();}
+}
+
+let ctx=null;
+function ping(){
+  try{
+    if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(900,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(500,ctx.currentTime+0.25);
+    gain.gain.setValueAtTime(0.25,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    osc.start();osc.stop(ctx.currentTime+0.5);
+  }catch(e){}
+}
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+rebuildMenu();
+</script>
+</body>
+</html>
