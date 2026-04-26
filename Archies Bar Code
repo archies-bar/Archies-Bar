@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archie's Bar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:          #0b0906;
+      --surface:     #161109;
+      --surface2:    #1f180e;
+      --surface3:    #261e12;
+      --gold:        #c8a84b;
+      --gold-light:  #e2c97a;
+      --gold-dim:    rgba(200,168,75,0.35);
+      --cream:       #f0e6d0;
+      --cream-mid:   #c4b698;
+      --cream-dim:   #7a6e5c;
+      --green:       #5a9966;
+      --red:         #8b3535;
+      --border:      rgba(200,168,75,0.18);
+      --border-mid:  rgba(200,168,75,0.45);
+      --border-on:   rgba(200,168,75,0.85);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.5;
+    }
+
+    .view { display: none; min-height: 100vh; flex-direction: column; animation: fadeIn 0.3s ease; }
+    .view.active { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .setup-banner {
+      background: rgba(139,53,53,0.25);
+      border-bottom: 1px solid rgba(139,53,53,0.6);
+      color: #d49090;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      padding: 0.7rem 1.5rem;
+      text-align: center;
+    }
+    .setup-banner a { color: var(--gold); text-decoration: none; }
+
+    header {
+      text-align: center;
+      padding: 2.5rem 1.5rem 2rem;
+      position: relative;
+    }
+
+    .header-deco {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1.5rem; margin-bottom: 1.5rem;
+    }
+    .header-deco-line {
+      height: 1px; width: 80px;
+      background: linear-gradient(90deg, transparent, var(--gold));
+    }
+    .header-deco-line.right {
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+    .header-deco-diamond {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+    }
+
+    .logo-img {
+      width: 100px; height: 100px;
+      object-fit: contain;
+      filter: brightness(0) saturate(100%) invert(72%) sepia(42%) saturate(600%) hue-rotate(8deg) brightness(88%);
+      display: block; margin: 0 auto 1.2rem;
+    }
+
+    .logo-fallback {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 0.8rem;
+    }
+
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--gold);
+      letter-spacing: 0.2em;
+      font-weight: 400;
+      text-transform: uppercase;
+    }
+
+    header .subtitle {
+      font-size: 0.75rem;
+      letter-spacing: 0.55em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+      margin-top: 0.5rem;
+      font-weight: 300;
+    }
+
+    .header-rule {
+      display: flex; align-items: center; gap: 1rem;
+      margin: 1.5rem auto 0; max-width: 400px; padding: 0 2rem;
+    }
+    .header-rule::before, .header-rule::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .header-rule span {
+      color: var(--gold); font-size: 0.65rem; letter-spacing: 0.4em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+
+    .main-content {
+      flex: 1; max-width: 680px; width: 100%;
+      margin: 0 auto; padding: 1.5rem 1.5rem 4rem;
+    }
+
+    .field { margin-bottom: 1.75rem; }
+
+    .field label {
+      display: block; font-size: 0.72rem;
+      letter-spacing: 0.4em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 0.6rem;
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      padding: 0.85rem 1.1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="text"]:focus,
+    select:focus { border-color: var(--gold); }
+    input::placeholder { color: var(--cream-dim); opacity: 0.6; }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute; right: 1rem; top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold); pointer-events: none; font-size: 1rem;
+    }
+    .select-wrap select { padding-right: 2.5rem; cursor: pointer; }
+    .select-wrap select option { background: #1a1510; }
+
+    .divider {
+      display: flex; align-items: center; gap: 1.2rem;
+      margin: 1.5rem 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .divider span {
+      color: var(--cream-dim); font-size: 0.72rem;
+      letter-spacing: 0.4em; text-transform: uppercase; white-space: nowrap;
+    }
+
+    .drinks-grid { display: grid; gap: 0.7rem; margin-bottom: 2rem; }
+
+    .drink-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden;
+    }
+
+    .drink-card-accent {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; background: var(--gold);
+      transform: scaleY(0); transform-origin: bottom;
+      transition: transform 0.25s ease;
+    }
+
+    .drink-card:hover { border-color: var(--border-mid); background: var(--surface2); }
+    .drink-card.selected { border-color: var(--gold); background: var(--surface2); }
+    .drink-card.selected .drink-card-accent { transform: scaleY(1); }
+
+    .drink-card-main { padding: 1.1rem 1.2rem 1.1rem 1.4rem; }
+
+    .drink-card-top {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 0.75rem;
+    }
+
+    .drink-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem; color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .badges { display: flex; gap: 0.35rem; flex-wrap: wrap; flex-shrink: 0; }
+
+    .badge {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.6rem; letter-spacing: 0.18em;
+      text-transform: uppercase; padding: 0.18rem 0.5rem;
+      border: 1px solid currentColor; white-space: nowrap;
+    }
+    .badge-spirit  { color: var(--gold-light); }
+    .badge-rec     { color: #6eb87a; }
+    .badge-alc     { color: #b86e6e; }
+
+    .drink-desc {
+      font-size: 0.92rem; color: var(--cream-mid);
+      font-style: italic; margin-top: 0.4rem; line-height: 1.4;
+    }
+
+    .drink-opts {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .drink-card.selected .drink-opts {
+      max-height: 300px;
+      border-top: 1px solid var(--border);
+      padding: 1rem 1.2rem 1.1rem 1.4rem;
+    }
+
+    .opts-inner { display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .toggle-row {
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .toggle-row .field-label {
+      font-size: 0.7rem; letter-spacing: 0.38em;
+      text-transform: uppercase; color: var(--gold);
+      flex-shrink: 0;
+    }
+    .toggle {
+      position: relative; width: 50px; height: 26px; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .t-track {
+      position: absolute; inset: 0;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .t-thumb {
+      position: absolute; width: 18px; height: 18px;
+      background: var(--cream-dim);
+      top: 3px; left: 3px;
+      transition: transform 0.2s ease, background 0.2s;
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .t-track { border-color: var(--gold); }
+    .toggle input:checked ~ .t-thumb { transform: translateX(24px); background: var(--gold); }
+    .toggle-val { color: var(--cream-mid); font-size: 1rem; font-style: italic; }
+
+    .btn-primary {
+      width: 100%; background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.85rem; letter-spacing: 0.55em;
+      text-transform: uppercase;
+      padding: 1.1rem 2rem;
+      cursor: pointer; transition: all 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.25s ease; z-index: 0;
+    }
+    .btn-primary:hover::before { transform: scaleX(1); }
+    .btn-primary:hover { color: var(--bg); }
+    .btn-primary > span { position: relative; z-index: 1; }
+    .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-primary:disabled::before { display: none; }
+    .btn-primary:disabled:hover { color: var(--gold); }
+
+    .success-box {
+      display: none; text-align: center;
+      background: var(--surface);
+      border: 1px solid rgba(90,153,102,0.45);
+      padding: 1.75rem; margin-top: 1.2rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .success-box.show { display: block; }
+    .success-box h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; color: #6eb87a; margin-bottom: 0.4rem;
+    }
+    .success-box p { color: var(--cream-mid); font-style: italic; }
+
+    .page-footer {
+      text-align: center; padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .page-footer a {
+      color: var(--cream-dim); font-size: 0.7rem;
+      letter-spacing: 0.35em; text-transform: uppercase;
+      text-decoration: none; transition: color 0.2s;
+    }
+    .page-footer a:hover { color: var(--gold); }
+
+    .login-wrap {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .login-box {
+      width: 100%; max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2.5rem 2.25rem;
+    }
+    .login-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem; color: var(--gold);
+      font-weight: 400; margin-bottom: 0.35rem;
+    }
+    .login-box .login-sub {
+      color: var(--cream-dim); font-size: 0.9rem;
+      font-style: italic; margin-bottom: 2rem;
+    }
+    .hint-row {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 0.5rem;
+    }
+    .hint-link {
+      font-size: 0.72rem; letter-spacing: 0.15em;
+      color: var(--cream-dim); cursor: pointer;
+      transition: color 0.2s;
+    }
+    .hint-link:hover { color: var(--gold); }
+    .hint-reveal {
+      display: none; font-size: 0.82rem; color: var(--gold);
+      font-style: italic; margin-top: 0.6rem; padding: 0.6rem 0.8rem;
+      background: rgba(200,168,75,0.07); border-left: 2px solid var(--gold);
+    }
+    .login-err {
+      display: none; color: #c07070; font-size: 0.85rem;
+      margin-top: 0.75rem; font-style: italic;
+    }
+    .login-back {
+      display: block; text-align: center; margin-top: 1.5rem;
+      color: var(--cream-dim); font-size: 0.72rem;
+      letter-spacing: 0.3em; text-transform: uppercase;
+      text-decoration: none; transition: color 0.2s;
+    }
+    .login-back:hover { color: var(--gold); }
+
+    .bar-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 0.5rem;
+    }
+    .bar-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.75rem; color: var(--gold-light);
+    }
+    .btn-logout {
+      background: none; border: 1px solid var(--border);
+      color: var(--cream-dim); font-family: 'Cormorant Garamond', serif;
+      font-size: 0.72rem; letter-spacing: 0.3em; text-transform: uppercase;
+      padding: 0.45rem 1rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--gold); color: var(--gold); }
+
+    .order-tally {
+      color: var(--cream-dim); font-size: 0.9rem;
+      font-style: italic; margin-bottom: 1.75rem;
+    }
+    .order-tally strong { color: var(--gold); font-style: normal; font-size: 1.1rem; }
+
+    .orders-list { display: grid; gap: 0.8rem; }
+
+    .order-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.2rem 1.4rem;
+      display: flex; justify-content: space-between;
+      align-items: center; gap: 1rem;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .order-card.new { border-color: var(--border-on); box-shadow: 0 0 18px rgba(200,168,75,0.12); }
+
+    .order-info .o-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; color: var(--cream);
+    }
+    .order-info .o-drink { color: var(--gold); font-size: 1rem; margin-top: 0.15rem; }
+    .order-info .o-details {
+      color: var(--cream-mid); font-size: 0.88rem;
+      font-style: italic; margin-top: 0.1rem;
+    }
+    .order-info .o-time {
+      color: var(--cream-dim); font-size: 0.72rem;
+      letter-spacing: 0.15em; margin-top: 0.5rem;
+    }
+
+    .btn-done {
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.78rem; letter-spacing: 0.25em;
+      text-transform: uppercase; padding: 0.6rem 1.1rem;
+      cursor: pointer; transition: all 0.2s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .btn-done:hover { background: var(--green); color: var(--bg); }
+
+    .empty-state {
+      text-align: center; padding: 3.5rem 2rem; color: var(--cream-dim);
+    }
+    .empty-state .e-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3; }
+    .empty-state p { font-style: italic; font-size: 1.05rem; }
+
+    @media (max-width: 500px) {
+      header h1 { font-size: 1.8rem; }
+      .order-card { flex-direction: column; align-items: flex-start; }
+      .btn-done { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CUSTOMER VIEW -->
+<div class="view active" id="view-customer">
+  <div id="setup-banner" class="setup-banner" style="display:none">
+    ⚠ Firebase not configured — orders won't save across devices yet.
+    <a href="https://console.firebase.google.com" target="_blank">Set it up here</a>,
+    then paste your config into the firebaseConfig block in this file.
+  </div>
+
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div>
+      <div class="header-deco-diamond"></div>
+      <div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="logo.png" alt="Archie's Bar"
+         onerror="this.style.display='none'; document.getElementById('logo-fb').style.display='block'">
+    <span class="logo-fallback" id="logo-fb" style="display:none">🍸</span>
+    <h1>Archie's Bar</h1>
+    <p class="subtitle">Cocktail Menu</p>
+    <div class="header-rule"><span>Place Your Order</span></div>
+  </header>
+
+  <main class="main-content">
+    <div class="field">
+      <label for="cust-name">Your Name</label>
+      <input type="text" id="cust-name" placeholder="Enter your name…" maxlength="40" autocomplete="off">
+    </div>
+
+    <div class="divider"><span>Choose a Cocktail</span></div>
+
+    <div class="drinks-grid" id="drinks-grid"></div>
+
+    <div class="success-box" id="success-box">
+      <h3>Order Received!</h3>
+      <p id="success-msg">Your drink is on its way.</p>
+    </div>
+
+    <button class="btn-primary" id="submit-btn" onclick="submitOrder()" disabled>
+      <span>Place Order</span>
+    </button>
+  </main>
+
+  <footer class="page-footer">
+    <a href="#" onclick="showView('view-login'); return false;">Staff Login</a>
+  </footer>
+</div>
+
+
+<!-- LOGIN VIEW -->
+<div class="view" id="view-login">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div>
+      <div class="header-deco-diamond"></div>
+      <div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="logo.png" alt="Archie's Bar"
+         onerror="this.style.display='none'">
+    <h1>Archie's Bar</h1>
+    <div class="header-rule"><span>Staff Access</span></div>
+  </header>
+
+  <div class="login-wrap">
+    <div class="login-box">
+      <h2>Bartender</h2>
+      <p class="login-sub">Enter the password to see live orders.</p>
+
+      <div class="field" style="margin-bottom:0.4rem">
+        <label for="pw-input">Password</label>
+        <input type="password" id="pw-input" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <div class="hint-row">
+        <div></div>
+        <span class="hint-link" onclick="toggleHint()">Forgot it?</span>
+      </div>
+      <div class="hint-reveal" id="hint-reveal">
+        Hint: what you serve at this bar — written in l33t speak (o→0, a→1)
+      </div>
+      <div class="login-err" id="login-err">Wrong password. Have another go.</div>
+
+      <br>
+      <button class="btn-primary" onclick="doLogin()"><span>Enter</span></button>
+      <a href="#" class="login-back" onclick="showView('view-customer'); return false;">← Back to Menu</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- BARTENDER VIEW -->
+<div class="view" id="view-bartender">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div>
+      <div class="header-deco-diamond"></div>
+      <div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="logo.png" alt="Archie's Bar"
+         onerror="this.style.display='none'">
+    <h1>Archie's Bar</h1>
+    <p class="subtitle">Order Dashboard</p>
+    <div class="header-rule"><span>Active Orders</span></div>
+  </header>
+
+  <main class="main-content">
+    <div class="bar-header">
+      <h2>Orders</h2>
+      <button class="btn-logout" onclick="doLogout()">Log Out</button>
+    </div>
+    <p class="order-tally" id="order-tally">Loading…</p>
+    <div class="orders-list" id="orders-list"></div>
+  </main>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+// ════════════════════════════════════════════════
+// FIREBASE CONFIG — replace with your own values
+// (from https://console.firebase.google.com)
+// ════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL:       "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+
+// ════════════════════════════════════════════════
+// STAFF PASSWORD
+// ════════════════════════════════════════════════
+const STAFF_PASSWORD = "c0ckta1l";
+
+// ════════════════════════════════════════════════
+// MENU
+// ════════════════════════════════════════════════
+const MENU = [
+  {
+    id: "raspberry-deluxe",
+    name: "Raspberry Deluxe",
+    spirit: "Gin",
+    desc: "Raspberry Puree, Simple Syrup & Lemon Juice",
+    mixers: ["Ginger Ale", "Lemonade"],
+    canAF: true,
+    rec: true
+  },
+  {
+    id: "cucumber-cooler",
+    name: "Cucumber Cooler",
+    spirit: 
