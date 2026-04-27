@@ -10,7 +10,870 @@
       --bg:#0b0906;--surface:#161109;--surface2:#1f180e;--surface3:#261e12;
       --gold:#c8a84b;--gold-light:#e2c97a;--cream:#f0e6d0;--cream-mid:#c4b698;
       --cream-dim:#7a6e5c;--green:#5a9966;--red:#8b3535;--border:rgba(200,168,75,0.18);
+      --border-mid:rgba(200,168,75,0.45);--<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archie's Bar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0b0906;--surface:#161109;--surface2:#1f180e;--surface3:#261e12;
+      --gold:#c8a84b;--gold-light:#e2c97a;--cream:#f0e6d0;--cream-mid:#c4b698;
+      --cream-dim:#7a6e5c;--green:#5a9966;--red:#8b3535;--border:rgba(200,168,75,0.18);
       --border-mid:rgba(200,168,75,0.45);--border-on:rgba(200,168,75,0.85);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--cream);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;overflow-x:hidden}
+    body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.5}
+    .view{display:none;min-height:100vh;flex-direction:column;animation:fadeIn 0.3s ease}
+    .view.active{display:flex}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    header{text-align:center;padding:2.5rem 1.5rem 2rem}
+    .header-deco{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-bottom:1.5rem}
+    .header-deco-line{height:1px;width:80px;background:linear-gradient(90deg,transparent,var(--gold))}
+    .header-deco-line.right{background:linear-gradient(90deg,var(--gold),transparent)}
+    .header-deco-diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg)}
+    .logo-img{width:110px;height:110px;object-fit:contain;display:block;margin:0 auto 1.2rem}
+    header h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);color:var(--gold);letter-spacing:0.2em;font-weight:400;text-transform:uppercase}
+    header .subtitle{font-size:0.75rem;letter-spacing:0.55em;text-transform:uppercase;color:var(--cream-dim);margin-top:0.5rem;font-weight:300}
+    .header-rule{display:flex;align-items:center;gap:1rem;margin:1.5rem auto 0;max-width:400px;padding:0 2rem}
+    .header-rule::before,.header-rule::after{content:'';flex:1;height:1px;background:var(--border)}
+    .header-rule span{color:var(--gold);font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;white-space:nowrap}
+    .main-content{flex:1;max-width:700px;width:100%;margin:0 auto;padding:1.5rem 1.5rem 4rem}
+    .field{margin-bottom:1.4rem}
+    .field label{display:block;font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem}
+    input[type="text"],input[type="password"],input[type="number"],select,textarea{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--cream);font-family:'Cormorant Garamond',serif;font-size:1.05rem;padding:0.75rem 1rem;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+    input::placeholder,textarea::placeholder{color:var(--cream-dim);opacity:0.6}
+    .select-wrap{position:relative}
+    .select-wrap::after{content:'▾';position:absolute;right:1rem;top:50%;transform:translateY(-50%);color:var(--gold);pointer-events:none}
+    .select-wrap select{padding-right:2.5rem;cursor:pointer}
+    .select-wrap select option{background:#1a1510}
+    .divider{display:flex;align-items:center;gap:1.2rem;margin:1.5rem 0}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .divider span{color:var(--cream-dim);font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;white-space:nowrap}
+    /* Drink cards */
+    .drinks-grid{display:grid;gap:0.7rem;margin-bottom:2rem}
+    .drink-card{background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s,background 0.2s;position:relative;overflow:hidden}
+    .drink-card-accent{position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);transform:scaleY(0);transform-origin:bottom;transition:transform 0.25s ease}
+    .drink-card:hover:not(.oos){border-color:var(--border-mid);background:var(--surface2)}
+    .drink-card.selected{border-color:var(--gold);background:var(--surface2)}
+    .drink-card.selected .drink-card-accent{transform:scaleY(1)}
+    .drink-card.oos{cursor:not-allowed;opacity:0.45}
+    .drink-card-main{padding:1.1rem 1.2rem 1.1rem 1.4rem}
+    .drink-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem}
+    .drink-name{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--cream);line-height:1.2}
+    .badges{display:flex;gap:0.35rem;flex-wrap:wrap;flex-shrink:0}
+    .badge{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.18rem 0.5rem;border:1px solid currentColor;white-space:nowrap;font-family:'Cormorant Garamond',serif}
+    .badge-spirit{color:var(--gold-light)}.badge-rec{color:#6eb87a}.badge-alc{color:#b86e6e}.badge-oos{color:#888;border-color:#555}
+    .drink-desc{font-size:0.92rem;color:var(--cream-mid);font-style:italic;margin-top:0.4rem;line-height:1.4}
+    .drink-opts{max-height:0;overflow:hidden;transition:max-height 0.3s ease}
+    .drink-card.selected .drink-opts{max-height:350px;border-top:1px solid var(--border);padding:1rem 1.2rem 1.1rem 1.4rem}
+    .opts-inner{display:flex;flex-direction:column;gap:0.85rem}
+    .toggle-row{display:flex;align-items:center;gap:1rem}
+    .toggle-row .field-label{font-size:0.7rem;letter-spacing:0.38em;text-transform:uppercase;color:var(--gold);flex-shrink:0}
+    .toggle{position:relative;width:50px;height:26px;flex-shrink:0}
+    .toggle input{opacity:0;width:0;height:0}
+    .t-track{position:absolute;inset:0;background:var(--surface3);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s}
+    .t-thumb{position:absolute;width:18px;height:18px;background:var(--cream-dim);top:3px;left:3px;transition:transform 0.2s ease,background 0.2s;pointer-events:none}
+    .toggle input:checked~.t-track{border-color:var(--gold)}
+    .toggle input:checked~.t-thumb{transform:translateX(24px);background:var(--gold)}
+    .toggle-val{color:var(--cream-mid);font-size:1rem;font-style:italic}
+    /* Buttons */
+    .btn-primary{width:100%;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:0.85rem;letter-spacing:0.55em;text-transform:uppercase;padding:1.1rem 2rem;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+    .btn-primary::before{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform 0.25s ease;z-index:0}
+    .btn-primary:hover::before{transform:scaleX(1)}
+    .btn-primary:hover{color:var(--bg)}
+    .btn-primary>span{position:relative;z-index:1}
+    .btn-primary:disabled{opacity:0.3;cursor:not-allowed}
+    .btn-primary:disabled::before{display:none}
+    .btn-primary:disabled:hover{color:var(--gold)}
+    .btn-small{background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:0.75rem;letter-spacing:0.3em;text-transform:uppercase;padding:0.5rem 1rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+    .btn-small:hover{background:var(--gold);color:var(--bg)}
+    .btn-small.danger{border-color:#8b3535;color:#c07070}
+    .btn-small.danger:hover{background:#8b3535;color:var(--cream)}
+    /* Success */
+    .success-box{display:none;text-align:center;background:var(--surface);border:1px solid rgba(90,153,102,0.45);padding:1.75rem;margin-top:1.2rem;animation:fadeIn 0.3s ease}
+    .success-box.show{display:block}
+    .success-box h3{font-family:'Playfair Display',serif;font-size:1.5rem;color:#6eb87a;margin-bottom:0.4rem}
+    .success-box p{color:var(--cream-mid);font-style:italic}
+    .page-footer{text-align:center;padding:1.5rem;border-top:1px solid var(--border);margin-top:auto}
+    .page-footer a{color:var(--cream-dim);font-size:0.7rem;letter-spacing:0.35em;text-transform:uppercase;text-decoration:none;transition:color 0.2s}
+    .page-footer a:hover{color:var(--gold)}
+    /* Login */
+    .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+    .login-box{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);padding:2.5rem 2.25rem}
+    .login-box h2{font-family:'Playfair Display',serif;font-size:1.75rem;color:var(--gold);font-weight:400;margin-bottom:0.35rem}
+    .login-box .login-sub{color:var(--cream-dim);font-size:0.9rem;font-style:italic;margin-bottom:2rem}
+    .hint-row{display:flex;justify-content:flex-end;margin-top:0.5rem}
+    .hint-link{font-size:0.72rem;letter-spacing:0.15em;color:var(--cream-dim);cursor:pointer;transition:color 0.2s}
+    .hint-link:hover{color:var(--gold)}
+    .hint-reveal{display:none;font-size:0.82rem;color:var(--gold);font-style:italic;margin-top:0.6rem;padding:0.6rem 0.8rem;background:rgba(200,168,75,0.07);border-left:2px solid var(--gold)}
+    .login-err{display:none;color:#c07070;font-size:0.85rem;margin-top:0.75rem;font-style:italic}
+    .login-back{display:block;text-align:center;margin-top:1.5rem;color:var(--cream-dim);font-size:0.72rem;letter-spacing:0.3em;text-transform:uppercase;text-decoration:none;transition:color 0.2s}
+    .login-back:hover{color:var(--gold)}
+    /* Bartender */
+    .bar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem}
+    .bar-header h2{font-family:'Playfair Display',serif;font-size:1.75rem;color:var(--gold-light)}
+    .btn-logout{background:none;border:1px solid var(--border);color:var(--cream-dim);font-family:'Cormorant Garamond',serif;font-size:0.72rem;letter-spacing:0.3em;text-transform:uppercase;padding:0.45rem 1rem;cursor:pointer;transition:all 0.2s}
+    .btn-logout:hover{border-color:var(--gold);color:var(--gold)}
+    .order-tally{color:var(--cream-dim);font-size:0.9rem;font-style:italic;margin-bottom:1.75rem}
+    .order-tally strong{color:var(--gold);font-style:normal;font-size:1.1rem}
+    .orders-list{display:grid;gap:0.8rem}
+    .order-card{background:var(--surface);border:1px solid var(--border);padding:1.2rem 1.4rem;animation:slideDown 0.3s ease}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+    .order-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:0.9rem}
+    .order-info .o-name{font-family:'Playfair Display',serif;font-size:1.25rem;color:var(--cream)}
+    .order-info .o-drink{color:var(--gold);font-size:1rem;margin-top:0.15rem}
+    .order-info .o-details{color:var(--cream-mid);font-size:0.88rem;font-style:italic;margin-top:0.1rem}
+    .order-info .o-time{color:var(--cream-dim);font-size:0.72rem;letter-spacing:0.15em;margin-top:0.5rem}
+    .btn-done{background:transparent;border:1px solid var(--green);color:var(--green);font-family:'Cormorant Garamond',serif;font-size:0.78rem;letter-spacing:0.25em;text-transform:uppercase;padding:0.6rem 1.1rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
+    .btn-done:hover{background:var(--green);color:var(--bg)}
+    /* Recipe */
+    .recipe-card{background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(200,168,75,0.3);padding:0.9rem 1.1rem}
+    .recipe-title{font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem}
+    .recipe-steps{list-style:none;display:flex;flex-direction:column;gap:0.3rem}
+    .recipe-steps li{font-size:0.9rem;color:var(--cream-mid);display:flex;gap:0.6rem;align-items:baseline}
+    .recipe-steps li .amt{color:var(--gold-light);font-size:0.88rem;min-width:3rem;text-align:right;flex-shrink:0}
+    .recipe-note{font-size:0.8rem;color:var(--cream-dim);font-style:italic;margin-top:0.5rem}
+    .empty-state{text-align:center;padding:3.5rem 2rem;color:var(--cream-dim)}
+    .empty-state .e-icon{font-size:2.5rem;margin-bottom:1rem;opacity:0.3}
+    .empty-state p{font-style:italic;font-size:1.05rem}
+    /* Tabs */
+    .dash-tabs{display:flex;gap:0;margin-bottom:1.75rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .dash-tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--cream-dim);font-family:'Cormorant Garamond',serif;font-size:0.78rem;letter-spacing:0.3em;text-transform:uppercase;padding:0.7rem 1.1rem;cursor:pointer;transition:all 0.2s;margin-bottom:-1px;white-space:nowrap}
+    .dash-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+    .dash-tab:hover:not(.active){color:var(--cream)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    /* Recipes tab */
+    .recipes-grid{display:grid;gap:1rem}
+    .recipe-full{background:var(--surface);border:1px solid var(--border);padding:1.3rem 1.5rem}
+    .recipe-full-name{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);margin-bottom:0.2rem}
+    .recipe-full-spirit{font-size:0.72rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--cream-dim);margin-bottom:0.9rem}
+    .recipe-full-steps{list-style:none;display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.6rem}
+    .recipe-full-steps li{font-size:0.95rem;color:var(--cream-mid);display:flex;gap:0.6rem;align-items:baseline}
+    .recipe-full-steps li .amt{color:var(--gold-light);font-size:0.88rem;min-width:3rem;text-align:right;flex-shrink:0}
+    .recipe-full-note{font-size:0.82rem;color:var(--cream-dim);font-style:italic;border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.3rem}
+    /* Stock */
+    .stock-section{margin-bottom:2rem}
+    .stock-section-title{font-size:0.72rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:0.85rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+    .stock-grid{display:grid;gap:0.5rem}
+    .stock-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);padding:0.75rem 1rem;transition:border-color 0.2s}
+    .stock-item.oos{border-color:rgba(139,53,53,0.5);background:rgba(139,53,53,0.08)}
+    .stock-item-name{font-size:1rem;color:var(--cream)}
+    .stock-toggle-wrap{display:flex;align-items:center;gap:0.6rem;flex-shrink:0}
+    .stock-status{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase}
+    .stock-status.in{color:var(--green)}.stock-status.out{color:#b86e6e}
+    .s-toggle{position:relative;width:44px;height:22px;flex-shrink:0}
+    .s-toggle input{opacity:0;width:0;height:0}
+    .s-track{position:absolute;inset:0;background:var(--surface3);border:1px solid var(--green);cursor:pointer;transition:all 0.2s}
+    .s-thumb{position:absolute;width:14px;height:14px;background:var(--green);top:3px;left:3px;transition:transform 0.2s ease,background 0.2s;pointer-events:none}
+    .s-toggle input:checked~.s-track{border-color:#8b3535;background:rgba(139,53,53,0.15)}
+    .s-toggle input:checked~.s-thumb{transform:translateX(22px);background:#b86e6e}
+    /* Menu editor */
+    .editor-section{margin-bottom:2.5rem;background:var(--surface);border:1px solid var(--border);padding:1.4rem}
+    .editor-section-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold);margin-bottom:1.2rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border)}
+    .editor-list{display:grid;gap:0.5rem;margin-bottom:1rem}
+    .editor-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);padding:0.6rem 0.9rem}
+    .editor-item-name{font-size:1rem;color:var(--cream)}
+    .editor-item-sub{font-size:0.8rem;color:var(--cream-dim);font-style:italic}
+    .editor-add-row{display:flex;gap:0.6rem;flex-wrap:wrap}
+    .editor-add-row input{flex:1;min-width:150px}
+    .inline-row{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem}
+    .checkbox-row{display:flex;align-items:center;gap:0.6rem;margin-bottom:0.8rem}
+    .checkbox-row input[type="checkbox"]{width:auto;accent-color:var(--gold)}
+    .checkbox-row label{font-size:0.9rem;color:var(--cream-mid);letter-spacing:normal;text-transform:none}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--gold);color:var(--gold);font-size:0.82rem;letter-spacing:0.2em;text-transform:uppercase;padding:0.7rem 1.5rem;z-index:10000;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+    .toast.show{opacity:1}
+    @media(max-width:500px){
+      header h1{font-size:1.8rem}
+      .order-top{flex-direction:column}
+      .btn-done{width:100%;text-align:center}
+      .inline-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- CUSTOMER VIEW -->
+<div class="view active" id="view-customer">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div><div class="header-deco-diamond"></div><div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" id="main-logo" src="" alt="Archie's Bar">
+    <h1>Archie's Bar</h1>
+    <p class="subtitle">Cocktail Menu</p>
+    <div class="header-rule"><span>Place Your Order</span></div>
+  </header>
+  <main class="main-content">
+    <div class="field">
+      <label for="cust-name">Your Name</label>
+      <input type="text" id="cust-name" placeholder="Enter your name…" maxlength="40" autocomplete="off">
+    </div>
+    <div class="divider"><span>Choose a Cocktail</span></div>
+    <div class="drinks-grid" id="drinks-grid"></div>
+    <div class="success-box" id="success-box">
+      <h3>Order Received!</h3>
+      <p id="success-msg">Your drink is on its way.</p>
+    </div>
+    <button class="btn-primary" id="submit-btn" onclick="submitOrder()" disabled><span>Place Order</span></button>
+  </main>
+  <footer class="page-footer">
+    <a href="#" onclick="showView('view-login');return false;">Staff Login</a>
+  </footer>
+</div>
+
+<!-- LOGIN VIEW -->
+<div class="view" id="view-login">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div><div class="header-deco-diamond"></div><div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="" alt="Archie's Bar">
+    <h1>Archie's Bar</h1>
+    <div class="header-rule"><span>Staff Access</span></div>
+  </header>
+  <div class="login-wrap">
+    <div class="login-box">
+      <h2>Bartender</h2>
+      <p class="login-sub">Enter the password to see live orders.</p>
+      <div class="field" style="margin-bottom:0.4rem">
+        <label for="pw-input">Password</label>
+        <input type="password" id="pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="hint-row">
+        <span class="hint-link" onclick="toggleHint()">Forgot it?</span>
+      </div>
+      <div class="hint-reveal" id="hint-reveal">
+        Hint: what you serve at this bar — written in l33t speak (o→0, i→1)
+      </div>
+      <div class="login-err" id="login-err">Wrong password. Have another go.</div>
+      <br>
+      <button class="btn-primary" onclick="doLogin()"><span>Enter</span></button>
+      <a href="#" class="login-back" onclick="showView('view-customer');return false;">← Back to Menu</a>
+    </div>
+  </div>
+</div>
+
+<!-- BARTENDER VIEW -->
+<div class="view" id="view-bartender">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div><div class="header-deco-diamond"></div><div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="" alt="Archie's Bar">
+    <h1>Archie's Bar</h1>
+    <p class="subtitle">Order Dashboard</p>
+    <div class="header-rule"><span>Bartender Panel</span></div>
+  </header>
+  <main class="main-content">
+    <div class="bar-header">
+      <h2>Dashboard</h2>
+      <button class="btn-logout" onclick="doLogout()">Log Out</button>
+    </div>
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="switchTab('orders')">Orders</button>
+      <button class="dash-tab" onclick="switchTab('recipes')">Recipes</button>
+      <button class="dash-tab" onclick="switchTab('stock')">Stock</button>
+      <button class="dash-tab" onclick="switchTab('editor')">Menu Editor</button>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="tab-panel active" id="tab-orders">
+      <p class="order-tally" id="order-tally">Loading…</p>
+      <div class="orders-list" id="orders-list"></div>
+    </div>
+
+    <!-- RECIPES -->
+    <div class="tab-panel" id="tab-recipes">
+      <div class="recipes-grid" id="recipes-grid"></div>
+    </div>
+
+    <!-- STOCK -->
+    <div class="tab-panel" id="tab-stock">
+      <div class="stock-section">
+        <div class="stock-section-title">Spirits</div>
+        <div class="stock-grid" id="stock-spirits"></div>
+      </div>
+      <div class="stock-section">
+        <div class="stock-section-title">Mixers &amp; Ingredients</div>
+        <div class="stock-grid" id="stock-mixers"></div>
+      </div>
+      <div class="stock-section">
+        <div class="stock-section-title">Whole Drinks</div>
+        <div class="stock-grid" id="stock-drinks"></div>
+      </div>
+    </div>
+
+    <!-- MENU EDITOR -->
+    <div class="tab-panel" id="tab-editor">
+
+      <!-- Add Spirit -->
+      <div class="editor-section">
+        <div class="editor-section-title">Spirits</div>
+        <div class="editor-list" id="editor-spirits-list"></div>
+        <div class="editor-add-row">
+          <input type="text" id="new-spirit" placeholder="e.g. Tequila">
+          <button class="btn-small" onclick="addSpirit()">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Add Mixer/Ingredient -->
+      <div class="editor-section">
+        <div class="editor-section-title">Mixers &amp; Ingredients</div>
+        <div class="editor-list" id="editor-mixers-list"></div>
+        <div class="editor-add-row">
+          <input type="text" id="new-mixer" placeholder="e.g. Elderflower Cordial">
+          <button class="btn-small" onclick="addMixer()">+ Add</button>
+        </div>
+      </div>
+
+      <!-- Add Drink -->
+      <div class="editor-section">
+        <div class="editor-section-title">Add New Drink</div>
+        <div class="field">
+          <label>Drink Name</label>
+          <input type="text" id="nd-name" placeholder="e.g. Margarita">
+        </div>
+        <div class="inline-row">
+          <div class="field">
+            <label>Spirit</label>
+            <input type="text" id="nd-spirit" placeholder="e.g. Tequila">
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <input type="text" id="nd-desc" placeholder="Short description">
+          </div>
+        </div>
+        <div class="field">
+          <label>Mixers (comma separated, leave blank if none)</label>
+          <input type="text" id="nd-mixers" placeholder="e.g. Lime Juice, Triple Sec">
+        </div>
+        <div class="field">
+          <label>Key Ingredients (comma separated — used for OOS tracking)</label>
+          <input type="text" id="nd-ingredients" placeholder="e.g. Simple Syrup, Lime Juice">
+        </div>
+        <div class="field">
+          <label>Recipe Steps (one per line, format: amount | ingredient)</label>
+          <textarea id="nd-recipe" rows="5" placeholder="1½ oz | Tequila&#10;1 oz | Lime Juice&#10;½ oz | Triple Sec&#10;Salt | Rim"></textarea>
+        </div>
+        <div class="field">
+          <label>Recipe Note (optional)</label>
+          <input type="text" id="nd-note" placeholder="e.g. Shake with ice and strain into salted glass">
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="nd-canaf" checked>
+          <label for="nd-canaf">Available alcohol-free</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="nd-rec">
+          <label for="nd-rec">Bartender's Pick</label>
+        </div>
+        <button class="btn-small" onclick="addDrink()" style="width:100%;padding:0.85rem">+ Add Drink to Menu</button>
+      </div>
+
+      <!-- Existing drinks with remove -->
+      <div class="editor-section">
+        <div class="editor-section-title">Current Menu (tap to remove)</div>
+        <div class="editor-list" id="editor-drinks-list"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+const LOGO_SRC = "Screenshot_2026-04-26-13-24-03-35_a1b1bbe5f63d5b96c1a0f87c197ebfae.jpg";
+document.querySelectorAll('.logo-img').forEach(el => el.src = LOGO_SRC);
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyAQQLf6-DRsuCcWl77f4-a7zyZ9ZDLV3g8",
+  authDomain:        "archies-bar.firebaseapp.com",
+  databaseURL:       "https://archies-bar-default-rtdb.firebaseio.com",
+  projectId:         "archies-bar",
+  storageBucket:     "archies-bar.firebasestorage.app",
+  messagingSenderId: "116592739080",
+  appId:             "1:116592739080:web:fa987164ba6db7de25e2bd"
+};
+
+const STAFF_PASSWORD = "c0ckta1l";
+
+// ═══════════════════════════════════
+// BASE RECIPES
+// ═══════════════════════════════════
+const BASE_RECIPES = {
+  "raspberry-deluxe": {
+    steps:[{amt:"½ oz",ing:"Raspberry Puree"},{amt:"½ oz",ing:"Lemon Juice"},{amt:"½ oz",ing:"Simple Syrup"},{amt:"1½ oz",ing:"Gin"},{amt:"Top",ing:"Ginger Ale or Lemonade"}],
+    note:"Shake puree, lemon, syrup & gin with ice. Strain and top with mixer."
+  },
+  "cucumber-cooler": {
+    steps:[{amt:"5",ing:"Muddled Mint Leaves"},{amt:"½ oz",ing:"Lemon Juice"},{amt:"Splash",ing:"Cucumber Juice"},{amt:"1½ oz",ing:"Gin"},{amt:"Top",ing:"Tonic Water"}],
+    note:"Muddle mint in glass. Add gin, lemon & cucumber. Top with tonic."
+  },
+  "coriander-fizz": {
+    steps:[{amt:"½ oz",ing:"Lemon Juice"},{amt:"Pinch",ing:"Crushed Coriander"},{amt:"1½ oz",ing:"Gin"},{amt:"Top",ing:"Lemonade or Tonic"}],
+    note:"Crush coriander in glass. Add gin and lemon, top with mixer. Alcohol only."
+  },
+  "mint-cooler": {
+    steps:[{amt:"5",ing:"Muddled Mint Leaves"},{amt:"½ oz",ing:"Lemon / Lime / Orange Juice"},{amt:"1½ oz",ing:"Gin"},{amt:"Top",ing:"Lemonade"}],
+    note:"Muddle mint. Add gin and chosen juice(s). Top with lemonade."
+  },
+  "lemon-gimlet": {
+    steps:[{amt:"2 oz",ing:"Gin or Vodka"},{amt:"¾ oz",ing:"Lemon Juice"},{amt:"½ oz",ing:"Simple Syrup"}],
+    note:"Shake all with ice and strain. Alcohol only."
+  },
+  "pina-colada": {
+    steps:[{amt:"1½ oz",ing:"White Rum"},{amt:"6 oz",ing:"Pineapple Juice"},{amt:"3 oz",ing:"Coconut Cream"},{amt:"1½ cups",ing:"Ice"}],
+    note:"Blend all until smooth."
+  },
+  "mojito": {
+    steps:[{amt:"2 oz",ing:"White Rum"},{amt:"½ oz",ing:"Lime Juice"},{amt:"1 tsp",ing:"White Sugar"},{amt:"5",ing:"Mint Leaves"},{amt:"Top",ing:"Tonic Water"}],
+    note:"Muddle mint with sugar and lime. Add rum, ice, top with tonic."
+  }
+};
+
+// ═══════════════════════════════════
+// BASE MENU
+// ═══════════════════════════════════
+const BASE_MENU = [
+  {id:"raspberry-deluxe",name:"Raspberry Deluxe",spirit:"Gin",desc:"Raspberry Puree, Simple Syrup & Lemon Juice",mixers:["Ginger Ale","Lemonade"],canAF:true,rec:true,ingredients:["Raspberry Puree","Simple Syrup","Lemon Juice","Gin"]},
+  {id:"cucumber-cooler",name:"Cucumber Cooler",spirit:"Gin",desc:"Cucumber Juice, Lemon Juice & Mint",mixers:["Tonic Water"],canAF:true,ingredients:["Cucumber Juice","Lemon Juice","Gin"]},
+  {id:"coriander-fizz",name:"Coriander Fizz",spirit:"Gin",desc:"Crushed Coriander & Lemon",mixers:["Lemonade","Tonic"],canAF:false,ingredients:["Lemon Juice","Gin"]},
+  {id:"mint-cooler",name:"Mint Cooler",spirit:"Gin",desc:"Crushed Mint with your choice of citrus juice",mixers:["Lemonade"],juices:["Lemon Juice","Lime Juice","Orange Juice"],canAF:true,ingredients:["Gin"]},
+  {id:"lemon-gimlet",name:"Lemon Gimlet",spirit:"Gin or Vodka",desc:"Lemon Juice & Simple Syrup",mixers:[],spirits:["Gin","Vodka"],canAF:false,ingredients:["Lemon Juice","Simple Syrup"]},
+  {id:"pina-colada",name:"Piña Colada",spirit:"White Rum",desc:"Coconut Cream, Pineapple Juice & Ice",mixers:[],canAF:true,ingredients:["Pineapple Juice","Coconut Cream","White Rum"]},
+  {id:"mojito",name:"Mojito",spirit:"White Rum",desc:"Sugar, Lime Juice, Tonic Water & Crushed Mint",mixers:[],canAF:true,ingredients:["Lime Juice","White Rum"]}
+];
+
+const BASE_SPIRITS = ["Gin","Vodka","White Rum"];
+const BASE_MIXERS  = ["Ginger Ale","Lemonade","Tonic Water","Tonic","Lemon Juice","Lime Juice","Orange Juice","Coconut Cream","Pineapple Juice","Raspberry Puree","Cucumber Juice","Simple Syrup"];
+
+// Runtime state (can be extended via editor)
+let MENU      = JSON.parse(localStorage.getItem('ab_menu'))      || JSON.parse(JSON.stringify(BASE_MENU));
+let SPIRITS   = JSON.parse(localStorage.getItem('ab_spirits'))   || [...BASE_SPIRITS];
+let MIXERS    = JSON.parse(localStorage.getItem('ab_mixers'))    || [...BASE_MIXERS];
+let RECIPES   = JSON.parse(localStorage.getItem('ab_recipes'))   || JSON.parse(JSON.stringify(BASE_RECIPES));
+
+function saveLocal(){
+  // Save to localStorage as fallback
+  localStorage.setItem('ab_menu',    JSON.stringify(MENU));
+  localStorage.setItem('ab_spirits', JSON.stringify(SPIRITS));
+  localStorage.setItem('ab_mixers',  JSON.stringify(MIXERS));
+  localStorage.setItem('ab_recipes', JSON.stringify(RECIPES));
+  // Save to Firebase if available
+  if(fbReady && menuRef){
+    menuRef.set({spirits:SPIRITS, mixers:MIXERS, menu:MENU, recipes:RECIPES})
+      .catch(e=>console.error("Menu save failed:",e));
+  }
+}
+
+let outOfStock={}, db=null, ordersRef=null, stockRef=null, menuRef=null, fbReady=false;
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]/g,'-'); }
+function isOOS(name){ return !!outOfStock[slug(name)]; }
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db=firebase.database();
+  ordersRef=db.ref("orders");
+  stockRef=db.ref("stock");
+  menuRef=db.ref("menu_data");
+  fbReady=true;
+
+  // Listen to stock
+  stockRef.on("value", snap=>{
+    outOfStock=snap.val()||{};
+    rebuildMenu();
+    const st=document.getElementById('tab-stock');
+    if(st&&st.classList.contains('active')) renderStockPanel();
+  });
+
+  // Listen to menu data (spirits, mixers, menu, recipes)
+  menuRef.on("value", snap=>{
+    const d=snap.val();
+    if(d){
+      if(d.spirits) SPIRITS=d.spirits;
+      if(d.mixers)  MIXERS=d.mixers;
+      if(d.menu)    MENU=d.menu;
+      if(d.recipes) RECIPES=d.recipes;
+    }
+    rebuildMenu();
+    const rt=document.getElementById('tab-recipes');
+    if(rt&&rt.classList.contains('active')) renderRecipesTab();
+    const et=document.getElementById('tab-editor');
+    if(et&&et.classList.contains('active')) renderEditorTab();
+  });
+
+} catch(e){ console.error("Firebase:",e); }
+
+// ═══════════════════════════════════
+// VIEWS / TABS
+// ═══════════════════════════════════
+function showView(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  if(id==="view-bartender") initDashboard();
+  window.scrollTo(0,0);
+}
+
+const TAB_NAMES = ["orders","recipes","stock","editor"];
+function switchTab(name){
+  document.querySelectorAll(".dash-tab").forEach((t,i)=>{
+    t.classList.toggle("active", TAB_NAMES[i]===name);
+  });
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  if(name==="stock")   renderStockPanel();
+  if(name==="recipes") renderRecipesTab();
+  if(name==="editor")  renderEditorTab();
+}
+
+// ═══════════════════════════════════
+// OOS LOGIC
+// ═══════════════════════════════════
+function drinkIsOOS(d){
+  if(isOOS(d.name)) return true;
+  if(d.spirits){ if(d.spirits.every(s=>isOOS(s))) return true; }
+  else { if(d.spirit.split(" or ").map(s=>s.trim()).every(s=>isOOS(s))) return true; }
+  if(d.mixers&&d.mixers.length===1&&isOOS(d.mixers[0])) return true;
+  if(d.mixers&&d.mixers.length>1&&d.mixers.every(m=>isOOS(m))) return true;
+  if(d.ingredients){ for(const ing of d.ingredients){ if(isOOS(ing)) return true; } }
+  return false;
+}
+function availableMixers(d){ return (d.mixers||[]).filter(m=>!isOOS(m)); }
+function availableSpirits(d){ return (d.spirits||[]).filter(s=>!isOOS(s)); }
+function availableJuices(d){ return (d.juices||[]).filter(j=>!isOOS(j)); }
+
+// ═══════════════════════════════════
+// MENU BUILDER
+// ═══════════════════════════════════
+let selectedId=null;
+
+function rebuildMenu(){
+  const grid=document.getElementById("drinks-grid");
+  if(!grid) return;
+  grid.innerHTML=""; selectedId=null;
+  const btn=document.getElementById("submit-btn");
+  if(btn) btn.disabled=true;
+  MENU.forEach(d=>buildCard(d,grid));
+}
+
+function buildCard(d,grid){
+  const oos=drinkIsOOS(d);
+  const card=document.createElement("div");
+  card.className="drink-card"+(oos?" oos":"");
+  card.id="card-"+d.id;
+  let badges=`<span class="badge badge-spirit">${d.spirit}</span>`;
+  if(d.rec)    badges+=`<span class="badge badge-rec">★ Pick</span>`;
+  if(!d.canAF) badges+=`<span class="badge badge-alc">Alc Only</span>`;
+  if(oos)      badges+=`<span class="badge badge-oos">Out of Stock</span>`;
+  const aMixers=oos?[]:availableMixers(d);
+  const aSpirits=oos?[]:availableSpirits(d);
+  const aJuices=oos?[]:availableJuices(d);
+  let opts="";
+  if(d.juices&&aJuices.length>0)
+    opts+=`<div class="field" style="margin:0"><label>Juice</label><div class="select-wrap"><select id="juice-${d.id}" onclick="event.stopPropagation()">${aJuices.map(j=>`<option>${j}</option>`).join("")}</select></div></div>`;
+  if(d.spirits&&aSpirits.length>0)
+    opts+=`<div class="field" style="margin:0"><label>Spirit</label><div class="select-wrap"><select id="spirit-${d.id}" onclick="event.stopPropagation()">${aSpirits.map(s=>`<option>${s}</option>`).join("")}</select></div></div>`;
+  if(aMixers.length>1)
+    opts+=`<div class="field" style="margin:0"><label>Mixer</label><div class="select-wrap"><select id="mixer-${d.id}" onclick="event.stopPropagation()">${aMixers.map(m=>`<option>${m}</option>`).join("")}</select></div></div>`;
+  else if(aMixers.length===1)
+    opts+=`<div style="font-size:0.88rem;color:var(--cream-dim);font-style:italic">Mixer: ${aMixers[0]}</div>`;
+  if(!oos&&d.canAF)
+    opts+=`<div class="toggle-row" onclick="event.stopPropagation()"><span class="field-label">With Alcohol</span><label class="toggle"><input type="checkbox" id="alc-${d.id}" checked onchange="document.getElementById('alcval-${d.id}').textContent=this.checked?'Yes':'No'"><div class="t-track"></div><div class="t-thumb"></div></label><span class="toggle-val" id="alcval-${d.id}">Yes</span></div>`;
+  card.innerHTML=`<div class="drink-card-accent"></div><div class="drink-card-main"><div class="drink-card-top"><div class="drink-name">${d.name}</div><div class="badges">${badges}</div></div><div class="drink-desc">${d.desc}</div></div><div class="drink-opts"><div class="opts-inner">${opts}</div></div>`;
+  if(!oos) card.addEventListener("click",()=>selectDrink(d.id));
+  grid.appendChild(card);
+}
+
+function selectDrink(id){
+  if(selectedId) document.getElementById("card-"+selectedId)?.classList.remove("selected");
+  selectedId=id;
+  document.getElementById("card-"+id)?.classList.add("selected");
+  checkSubmit();
+}
+function checkSubmit(){
+  const name=document.getElementById("cust-name").value.trim();
+  document.getElementById("submit-btn").disabled=!(name&&selectedId);
+}
+document.getElementById("cust-name").addEventListener("input",checkSubmit);
+
+// ═══════════════════════════════════
+// ORDER
+// ═══════════════════════════════════
+function submitOrder(){
+  const name=document.getElementById("cust-name").value.trim();
+  if(!name||!selectedId) return;
+  const d=MENU.find(x=>x.id===selectedId); if(!d) return;
+  const parts=[];
+  if(d.juices)  parts.push(document.getElementById("juice-"+d.id)?.value||"");
+  if(d.spirits) parts.push(document.getElementById("spirit-"+d.id)?.value||"");
+  const am=availableMixers(d);
+  if(am.length>1) parts.push(document.getElementById("mixer-"+d.id)?.value||"");
+  else if(am.length===1) parts.push(am[0]);
+  parts.push(d.canAF?(document.getElementById("alc-"+d.id)?.checked?"With Alcohol":"Alcohol-Free"):"With Alcohol");
+  const order={name,drink:d.name,drinkId:d.id,spirit:d.spirit,details:parts.filter(Boolean).join(" · "),timestamp:Date.now()};
+  if(fbReady&&ordersRef) ordersRef.push(order).then(()=>showSuccess(name,d.name)).catch(()=>showSuccess(name,d.name,true));
+  else showSuccess(name,d.name,true);
+}
+
+function showSuccess(name,drink,offline=false){
+  const box=document.getElementById("success-box");
+  document.getElementById("success-msg").textContent=offline?`${drink} noted — Firebase not set up yet.`:`${drink} coming right up, ${name}!`;
+  box.classList.add("show");
+  document.getElementById("submit-btn").disabled=true;
+  setTimeout(()=>{
+    box.classList.remove("show");
+    document.getElementById("cust-name").value="";
+    if(selectedId){document.getElementById("card-"+selectedId)?.classList.remove("selected");selectedId=null;}
+    document.getElementById("submit-btn").disabled=true;
+  },5000);
+}
+
+// ═══════════════════════════════════
+// LOGIN
+// ═══════════════════════════════════
+function doLogin(){
+  const pw=document.getElementById("pw-input").value;
+  const err=document.getElementById("login-err");
+  if(pw===STAFF_PASSWORD){err.style.display="none";document.getElementById("pw-input").value="";showView("view-bartender");}
+  else err.style.display="block";
+}
+function doLogout(){listenStarted=false;if(ordersRef)ordersRef.off();showView("view-customer");}
+function toggleHint(){const h=document.getElementById("hint-reveal");h.style.display=h.style.display==="block"?"none":"block";}
+
+// ═══════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════
+let listenStarted=false, knownKeys=new Set();
+
+function initDashboard(){
+  if(!fbReady||!ordersRef){
+    document.getElementById("order-tally").textContent="Firebase not configured.";
+    document.getElementById("orders-list").innerHTML=`<div class="empty-state"><div class="e-icon">🍸</div><p>Set up Firebase to see live orders.</p></div>`;
+    return;
+  }
+  if(listenStarted) return;
+  listenStarted=true;
+  ordersRef.on("value",snap=>renderOrders(snap.val()));
+}
+
+function recipeHTML(drinkId){
+  const r=RECIPES[drinkId]; if(!r) return "";
+  const rows=r.steps.map(s=>`<li><span class="amt">${esc(s.amt)}</span>${esc(s.ing)}</li>`).join("");
+  const note=r.note?`<div class="recipe-note">${esc(r.note)}</div>`:"";
+  return `<div class="recipe-card"><div class="recipe-title">Recipe</div><ul class="recipe-steps">${rows}</ul>${note}</div>`;
+}
+
+function renderOrders(data){
+  const list=document.getElementById("orders-list"),tally=document.getElementById("order-tally");
+  if(!data){
+    tally.innerHTML="No active orders right now.";
+    list.innerHTML=`<div class="empty-state"><div class="e-icon">🍸</div><p>Quiet night — waiting for orders…</p></div>`;
+    knownKeys=new Set(); return;
+  }
+  const orders=Object.entries(data).map(([k,v])=>({key:k,...v})).sort((a,b)=>a.timestamp-b.timestamp);
+  tally.innerHTML=`<strong>${orders.length}</strong> active order${orders.length!==1?"s":""}`;
+  orders.forEach(o=>{if(!knownKeys.has(o.key))ping();});
+  knownKeys=new Set(orders.map(o=>o.key));
+  list.innerHTML="";
+  orders.forEach(o=>{
+    const card=document.createElement("div");
+    card.className="order-card";
+    const time=new Date(o.timestamp).toLocaleTimeString("en-NZ",{hour:"2-digit",minute:"2-digit"});
+    card.innerHTML=`
+      <div class="order-top">
+        <div class="order-info">
+          <div class="o-name">${esc(o.name)}</div>
+          <div class="o-drink">${esc(o.drink)}</div>
+          <div class="o-details">${esc(o.details)}</div>
+          <div class="o-time">Ordered at ${time}</div>
+        </div>
+        <button class="btn-done" onclick="completeOrder('${o.key}')">Done ✓</button>
+      </div>
+      ${recipeHTML(o.drinkId||"")}`;
+    list.appendChild(card);
+  });
+}
+function completeOrder(key){if(ordersRef)ordersRef.child(key).remove();}
+
+// ═══════════════════════════════════
+// RECIPES TAB
+// ═══════════════════════════════════
+function renderRecipesTab(){
+  const grid=document.getElementById("recipes-grid");
+  grid.innerHTML="";
+  MENU.forEach(d=>{
+    const r=RECIPES[d.id]; if(!r) return;
+    const rows=r.steps.map(s=>`<li><span class="amt">${esc(s.amt)}</span>${esc(s.ing)}</li>`).join("");
+    const note=r.note?`<div class="recipe-full-note">${esc(r.note)}</div>`:"";
+    const el=document.createElement("div");
+    el.className="recipe-full";
+    el.innerHTML=`<div class="recipe-full-name">${esc(d.name)}</div><div class="recipe-full-spirit">${esc(d.spirit)}</div><ul class="recipe-full-steps">${rows}</ul>${note}`;
+    grid.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════
+// STOCK TAB
+// ═══════════════════════════════════
+function renderStockPanel(){
+  renderStockSection("stock-spirits", SPIRITS);
+  renderStockSection("stock-mixers",  MIXERS);
+  renderStockSection("stock-drinks",  MENU.map(d=>d.name));
+}
+function renderStockSection(containerId,items){
+  const el=document.getElementById(containerId); el.innerHTML="";
+  items.forEach(name=>{
+    const oos=isOOS(name),row=document.createElement("div");
+    row.className="stock-item"+(oos?" oos":"");
+    row.innerHTML=`<div class="stock-item-name">${esc(name)}</div><div class="stock-toggle-wrap"><span class="stock-status ${oos?"out":"in"}">${oos?"Out":"In Stock"}</span><label class="s-toggle"><input type="checkbox" ${oos?"checked":""} onchange="toggleStock('${esc(name)}',this.checked)"><div class="s-track"></div><div class="s-thumb"></div></label></div>`;
+    el.appendChild(row);
+  });
+}
+function toggleStock(name,isNowOOS){
+  const k=slug(name);
+  if(fbReady&&stockRef){if(isNowOOS)stockRef.child(k).set(true);else stockRef.child(k).remove();}
+  else{if(isNowOOS)outOfStock[k]=true;else delete outOfStock[k];rebuildMenu();renderStockPanel();}
+}
+
+// ═══════════════════════════════════
+// MENU EDITOR TAB
+// ═══════════════════════════════════
+function renderEditorTab(){
+  renderEditorList("editor-spirits-list", SPIRITS, removeSpirit);
+  renderEditorList("editor-mixers-list",  MIXERS,  removeMixer);
+  renderEditorList("editor-drinks-list",  MENU.map(d=>d.name), removeDrink);
+}
+
+function renderEditorList(containerId, items, removeFn){
+  const el=document.getElementById(containerId); el.innerHTML="";
+  if(!items.length){ el.innerHTML=`<div style="color:var(--cream-dim);font-style:italic;font-size:0.9rem;padding:0.4rem 0">None yet.</div>`; return; }
+  items.forEach(name=>{
+    const row=document.createElement("div");
+    row.className="editor-item";
+    row.innerHTML=`<div class="editor-item-name">${esc(name)}</div><button class="btn-small danger" onclick="(${removeFn.toString()})('${esc(name)}')">Remove</button>`;
+    el.appendChild(row);
+  });
+}
+
+function addSpirit(){
+  const inp=document.getElementById("new-spirit");
+  const val=inp.value.trim(); if(!val) return;
+  if(SPIRITS.includes(val)){ showToast("Already exists"); return; }
+  SPIRITS.push(val); saveLocal(); inp.value="";
+  renderEditorTab(); renderStockPanel();
+  showToast(`${val} added`);
+}
+
+function removeSpirit(name){
+  SPIRITS=SPIRITS.filter(s=>s!==name); saveLocal();
+  renderEditorTab(); renderStockPanel();
+  showToast(`${name} removed`);
+}
+
+function addMixer(){
+  const inp=document.getElementById("new-mixer");
+  const val=inp.value.trim(); if(!val) return;
+  if(MIXERS.includes(val)){ showToast("Already exists"); return; }
+  MIXERS.push(val); saveLocal(); inp.value="";
+  renderEditorTab(); renderStockPanel();
+  showToast(`${val} added`);
+}
+
+function removeMixer(name){
+  MIXERS=MIXERS.filter(m=>m!==name); saveLocal();
+  renderEditorTab(); renderStockPanel();
+  showToast(`${name} removed`);
+}
+
+function addDrink(){
+  const name    = document.getElementById("nd-name").value.trim();
+  const spirit  = document.getElementById("nd-spirit").value.trim();
+  const desc    = document.getElementById("nd-desc").value.trim();
+  const mixersRaw = document.getElementById("nd-mixers").value.trim();
+  const ingsRaw   = document.getElementById("nd-ingredients").value.trim();
+  const recipeRaw = document.getElementById("nd-recipe").value.trim();
+  const note    = document.getElementById("nd-note").value.trim();
+  const canAF   = document.getElementById("nd-canaf").checked;
+  const rec     = document.getElementById("nd-rec").checked;
+
+  if(!name||!spirit){ showToast("Name and spirit required"); return; }
+  if(MENU.find(d=>d.name===name)){ showToast("Drink already exists"); return; }
+
+  const id = slug(name);
+  const mixers = mixersRaw ? mixersRaw.split(",").map(s=>s.trim()).filter(Boolean) : [];
+  const ingredients = ingsRaw ? ingsRaw.split(",").map(s=>s.trim()).filter(Boolean) : [];
+
+  // Parse recipe steps: "1½ oz | Gin"
+  const steps = recipeRaw ? recipeRaw.split("\n").map(line=>{
+    const parts = line.split("|");
+    return parts.length>=2 ? {amt:parts[0].trim(), ing:parts[1].trim()} : {amt:"", ing:line.trim()};
+  }).filter(s=>s.ing) : [];
+
+  MENU.push({id,name,spirit,desc,mixers,canAF,rec,ingredients});
+  if(steps.length) RECIPES[id]={steps,note:note||undefined};
+  saveLocal(); rebuildMenu(); renderEditorTab();
+
+  // Clear form
+  ["nd-name","nd-spirit","nd-desc","nd-mixers","nd-ingredients","nd-recipe","nd-note"].forEach(id=>{
+    document.getElementById(id).value="";
+  });
+  document.getElementById("nd-canaf").checked=true;
+  document.getElementById("nd-rec").checked=false;
+  showToast(`${name} added to menu`);
+}
+
+function removeDrink(name){
+  if(!confirm(`Remove ${name} from the menu?`)) return;
+  const id=MENU.find(d=>d.name===name)?.id;
+  MENU=MENU.filter(d=>d.name!==name);
+  if(id) delete RECIPES[id];
+  saveLocal(); rebuildMenu(); renderEditorTab();
+  showToast(`${name} removed`);
+}
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+// ═══════════════════════════════════
+// PING
+// ═══════════════════════════════════
+let ctx=null;
+function ping(){
+  try{
+    if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(900,ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(500,ctx.currentTime+0.25);
+    gain.gain.setValueAtTime(0.25,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.5);
+    osc.start();osc.stop(ctx.currentTime+0.5);
+  }catch(e){}
+}
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+rebuildMenu();
+</script>
+</body>
+</html>border-on:rgba(200,168,75,0.85);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
