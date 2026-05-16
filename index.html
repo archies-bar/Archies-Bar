@@ -214,8 +214,44 @@
     <button class="btn-primary" id="submit-btn" onclick="submitOrder()" disabled><span>Place Order</span></button>
   </main>
   <footer class="page-footer">
+    <a href="#" onclick="showView('view-tip');return false;">Leave a Tip 🍸</a>
+    <span style="color:var(--border-mid);margin:0 0.8rem">·</span>
     <a href="#" onclick="showView('view-login');return false;">Staff Login</a>
   </footer>
+</div>
+
+<!-- TIP VIEW -->
+<div class="view" id="view-tip">
+  <header>
+    <div class="header-deco">
+      <div class="header-deco-line"></div><div class="header-deco-diamond"></div><div class="header-deco-line right"></div>
+    </div>
+    <img class="logo-img" src="" alt="Archie's Bar">
+    <h1>Archie's Bar</h1>
+    <p class="subtitle">Leave a Tip</p>
+    <div class="header-rule"><span>Much Appreciated</span></div>
+  </header>
+  <div class="login-wrap">
+    <div class="login-box" style="max-width:420px">
+      <h2 style="margin-bottom:1rem">Tip Jar</h2>
+      <p style="color:var(--cream-mid);font-style:italic;margin-bottom:1.75rem;font-size:1rem;line-height:1.5">Enjoyed your drinks? Open your banking app, tap <strong style="color:var(--cream);font-style:normal">Pay someone</strong>, enter the account number below, and add any amount you like. It goes straight to your bartender.</p>
+      <div style="background:var(--surface2);border:1px solid var(--border);padding:1.2rem 1.4rem;margin-bottom:1rem">
+        <div style="font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem">Bank Account</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--cream);letter-spacing:0.05em">03-0854-0063857-001</div>
+        <div style="font-size:0.8rem;color:var(--cream-dim);font-style:italic;margin-top:0.4rem">Archie's Bar · Westpac NZ</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);padding:1rem 1.4rem;margin-bottom:1.75rem">
+        <div style="font-size:0.65rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem">Suggested Amounts</div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+          <span style="background:var(--surface3);border:1px solid var(--border-mid);color:var(--cream);padding:0.35rem 0.9rem;font-size:0.95rem">$2</span>
+          <span style="background:var(--surface3);border:1px solid var(--border-mid);color:var(--cream);padding:0.35rem 0.9rem;font-size:0.95rem">$5</span>
+          <span style="background:var(--surface3);border:1px solid var(--border-mid);color:var(--cream);padding:0.35rem 0.9rem;font-size:0.95rem">$10</span>
+          <span style="background:var(--surface3);border:1px solid var(--border-mid);color:var(--cream);padding:0.35rem 0.9rem;font-size:0.95rem">Whatever you feel</span>
+        </div>
+      </div>
+      <a href="#" class="login-back" onclick="showView('view-customer');return false;">← Back to Menu</a>
+    </div>
+  </div>
 </div>
 
 <!-- LOGIN VIEW -->
@@ -488,11 +524,15 @@ try {
   // Listen to menu data (spirits, mixers, menu, recipes)
   menuRef.on("value", snap=>{
     const d=snap.val();
-    if(d){
+    if(d && d.menu && d.menu.length){
+      // Firebase has menu data - use it
       if(d.spirits) SPIRITS=d.spirits;
       if(d.mixers)  MIXERS=d.mixers;
       if(d.menu)    MENU=d.menu;
       if(d.recipes) RECIPES=d.recipes;
+    } else {
+      // Nothing in Firebase yet - push the current menu up so it syncs
+      menuRef.set({spirits:SPIRITS, mixers:MIXERS, menu:MENU, recipes:RECIPES});
     }
     rebuildMenu();
     const rt=document.getElementById('tab-recipes');
